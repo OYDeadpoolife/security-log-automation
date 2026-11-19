@@ -159,16 +159,24 @@ Reasoning, thresholds and false positives for each rule: [docs/detection-rules.m
 
 ## Screenshots
 
-Real screenshots are added by the author after running the project on a real machine. Planned shots and their exact
-commands are listed in [screenshots/README.md](screenshots/README.md). Until they exist, no image is embedded here.
+The images below are rendered from the real output of the commands shown, run on a clean clone of this repository. They are not
+photographs of a terminal window, and nothing in them is edited. The commands are listed in [screenshots/README.md](screenshots/README.md).
 
-<!--
-After adding a screenshot, uncomment its line:
+**`./bin/seclog demo`** — the terminal summary:
+
 ![seclog demo output](screenshots/01-demo-terminal.png)
+
+**The generated `report.md`**, section "Findings":
+
 ![Generated Markdown report](screenshots/02-report-markdown.png)
+
+**`summary.json`** checked with `jq`:
+
 ![JSON output validated with jq](screenshots/03-json-output.png)
+
+**The test suite:**
+
 ![Test suite result](screenshots/04-test-results.png)
--->
 
 ## Testing
 
