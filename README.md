@@ -7,8 +7,8 @@
 abuse, and writes the result as **JSON, CSV and a readable Markdown report**. It needs no database,
 no SIEM and no Python at run time, and it never modifies the logs it reads.
 
-> **Status:** Version 1.0.0. Tested on macOS (Bash 3.2, BWK awk). The GitHub Actions workflow that tests
-> Linux (mawk, gawk, original-awk) is included but has not run yet — see [TEST_RESULTS.md](TEST_RESULTS.md).
+> **Status:** Version 1.0.0. Tests pass on macOS (Bash 3.2, BWK awk) and, in GitHub Actions, on Ubuntu with
+> mawk, gawk and original-awk — see [TEST_RESULTS.md](TEST_RESULTS.md).
 > All sample data is **synthetic**. This is a learning and portfolio project, not a production monitoring product.
 
 ## For a recruiter or SOC manager (30 seconds)

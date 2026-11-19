@@ -1,6 +1,7 @@
 # Test results — security-log-automation (`seclog` 1.0.0)
 
-Last full run: **2026-10-03**. Result: **134 passed, 0 failed, 0 skipped** (`python3 -m pytest`, about 5 seconds).
+Last full local run: **2026-10-03**. Result: **134 passed, 0 failed, 0 skipped** (`python3 -m pytest`, about 5 seconds).
+First GitHub Actions run: **2026-11-19**. Result: **134 passed in all four jobs** (Ubuntu with mawk, gawk and original-awk; macOS). See below.
 
 ## Environment of that run
 
@@ -23,6 +24,20 @@ Last full run: **2026-10-03**. Result: **134 passed, 0 failed, 0 skipped** (`pyt
 | Cron wrapper (`tests/test_cron_wrapper.py`) | 7 | Help, one dated folder per day, correct day window, second run does nothing, bad date and unknown option rejected, failure exit status, default date is yesterday |
 | Repository hygiene (`tests/test_static.py`) | 35 | All required files exist; no `sudo`/package-manager/`curl`/`eval` in the code; only three allowed uses of `rm`, `rmdir` and `mv`; no secrets or local paths; sample data uses only documentation or private addresses; **ShellCheck clean; shfmt clean** |
 
+### GitHub Actions: first run on Linux (2026-11-19)
+
+Commit `075a625`, run: <https://github.com/OYDeadpoolife/security-log-automation/actions/runs/44527627789>. **134 passed in every job.**
+This was the first time the code ran outside the author's Mac.
+
+| Runner | Bash | awk | Python |
+|---|---|---|---|
+| `ubuntu-latest` | 5.3.9 | mawk 1.3.4 | 3.12.16 |
+| `ubuntu-latest` | 5.3.9 | gawk 5.3.2 | 3.12.16 |
+| `ubuntu-latest` | 5.3.9 | `original-awk` package (version string not captured) | 3.12.16 |
+| `macos-latest` | 3.2.57 | the system BWK awk | 3.12.10 |
+
+ShellCheck 0.11.0 ran on every runner.
+
 ### Mutation check (does the suite really catch bugs?)
 
 Four deliberate bugs were introduced one at a time into a copy of the project, and the suite failed each time:
@@ -38,16 +53,14 @@ not allow for the README in the example-output folder. All were fixed in the tes
 
 ## FAIL — executed and failed
 
-None in the last run.
+None in the last local run and none in the first GitHub Actions run.
 
 ## NOT TESTED — environment not available to the author when this was written
 
 | Item | Why |
 |---|---|
-| Linux (Ubuntu, Debian, Kali) | No Linux machine was available in the build environment |
-| awk implementations **mawk, gawk and original-awk** | Not installed on the build machine. The code avoids features that differ between them, but this is unproven |
-| Bash 4 and 5 | Only Bash 3.2 was available |
-| GitHub Actions workflow (`.github/workflows/ci.yml`) | Cannot run until the repository is pushed. The YAML has not been executed |
+| Linux on a real machine or VM (Debian, Kali, a server) | Only the Ubuntu GitHub Actions runner was used (see the CI section above) |
+| Bash 4.x | Bash 3.2 (macOS) and 5.3 (Ubuntu runner) were tested; no 4.x |
 | A real `/var/log/auth.log` from a real server | Only the synthetic sample and hand-written fixtures were used |
 | Cron daemon starting `run_daily.sh` | The wrapper was tested by calling it directly, not through cron |
 | Splunk and Elastic ingestion | No SIEM was available. Only the `jq` commands in `docs/siem-integration.md` were run |
