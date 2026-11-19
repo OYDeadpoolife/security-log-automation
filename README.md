@@ -56,6 +56,12 @@ Python 3 with pytest for the test suite only, ShellCheck and shfmt for code qual
 ## How it works
 
 ```mermaid
+---
+config:
+  htmlLabels: false
+  flowchart:
+    htmlLabels: false
+---
 flowchart LR
     A[auth.log / .gz / stdin] --> B[parse_auth.awk<br/>normalize events]
     B --> C[sort by time]

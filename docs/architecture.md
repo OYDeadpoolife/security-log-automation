@@ -13,6 +13,12 @@
 ## Data flow
 
 ```mermaid
+---
+config:
+  htmlLabels: false
+  flowchart:
+    htmlLabels: false
+---
 flowchart TD
     CLI[bin/seclog<br/>options, validation] --> V[seclog_validate.sh<br/>inputs, output dir]
     V --> P[seclog_pipeline.sh]
