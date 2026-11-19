@@ -11,6 +11,13 @@ no SIEM and no Python at run time, and it never modifies the logs it reads.
 > mawk, gawk and original-awk — see [TEST_RESULTS.md](TEST_RESULTS.md).
 > All sample data is **synthetic**. This is a learning and portfolio project, not a production monitoring product.
 
+## In plain words
+
+Every Linux server keeps a diary of who tried to log in and who used administrator powers (the file `/var/log/auth.log`).
+Reading that diary by hand is slow. `seclog` reads it for you, points out the suspicious parts (for example someone guessing
+passwords again and again and then getting in) and writes a short report that a person can read. It only reads the file and
+never changes it. All the example data is made up. New to these terms? See the [glossary](docs/glossary.md).
+
 ## For a recruiter or SOC manager (30 seconds)
 
 * **Problem:** an analyst facing a raw `auth.log` has to answer "was anyone brute-forced, did a login
@@ -60,6 +67,10 @@ flowchart LR
     E --> I[report.md]
     E --> J[terminal summary]
 ```
+
+**How to read the diagram:** the log file goes in on the left. The tool turns each line into a structured event, sorts the events
+by time and applies the detection rules. The results come out on the right as files for other programs (JSON and CSV), a readable
+report (`report.md`) and a summary printed in the terminal.
 
 Every stage is plain text, so each intermediate step can be inspected. See [docs/architecture.md](docs/architecture.md).
 
