@@ -1,0 +1,8 @@
+Mar 14 13:00:00 web01 useradd[10]: new group: name=mallory, GID=1010
+Mar 14 13:00:00 web01 useradd[10]: new user: name=mallory, UID=1010, GID=1010, home=/home/mallory, shell=/bin/bash, from=/dev/pts/0
+Mar 14 13:00:10 web01 usermod[11]: add 'mallory' to group 'sudo'
+Mar 14 13:00:10 web01 usermod[11]: add 'mallory' to shadow group 'sudo'
+Mar 14 13:00:20 web01 usermod[12]: add 'bob' to group 'staff'
+Mar 14 13:00:30 web01 gpasswd[13]: user trudy added by root to group admin
+Mar 14 13:00:40 web01 passwd[14]: pam_unix(passwd:chauthtok): password changed for mallory
+Mar 14 13:00:50 web01 userdel[15]: delete user 'olduser'

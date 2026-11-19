@@ -1,0 +1,4 @@
+Mar 14 14:00:00 web01 su[1]: Successful su for root by alice
+Mar 14 14:00:10 web01 su[2]: FAILED su for root by bob
+Mar 14 14:00:20 web01 sshd[3]: Accepted publickey for root from 192.0.2.30 port 55555 ssh2
+Mar 14 14:00:30 web01 sshd[4]: Accepted publickey for alice from 192.0.2.31 port 55556 ssh2

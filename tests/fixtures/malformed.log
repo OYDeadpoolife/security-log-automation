@@ -1,0 +1,6 @@
+this is not a log line
+Mar 99 25:61:61 web01 sshd[1]: Failed password for root from 192.0.2.1 port 1 ssh2
+Foo 14 10:00:00 web01 sshd[1]: Failed password for root from 192.0.2.1 port 1 ssh2
+Mar 14 10:00:00
+Mar 14 10:00:01 web01 sshd[2]: Failed password for root from 192.0.2.1 port 22 ssh2
+2026-13-45T99:99:99 web01 sshd[3]: Failed password for root from 192.0.2.1 port 22 ssh2

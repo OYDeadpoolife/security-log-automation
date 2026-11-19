@@ -1,0 +1,24 @@
+# Results produced by seclog (may contain user names and addresses from real logs)
+seclog-output/
+seclog-reports/
+
+# Python / test tooling
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Editors and operating systems
+.DS_Store
+*.swp
+*.orig
+*.bak
+.idea/
+.vscode/
+
+# Never commit real logs, keys or environment files
+*.pem
+*.key
+.env
+auth.log.*

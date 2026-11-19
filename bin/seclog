@@ -1,0 +1,299 @@
+#!/usr/bin/env bash
+# seclog - analyse Linux authentication logs and report suspicious activity.
+#
+# Reads auth.log style files (never modifies them), applies a small set of explainable
+# detection rules and writes JSON, CSV and Markdown results to a new directory.
+# Run "seclog --help" for usage and "seclog demo" for a safe demonstration.
+#
+# Error handling: "set -e" is deliberately not used. Every step that can fail is checked
+# explicitly and reports a clear message through die(), which keeps failures predictable.
+set -u
+set -o pipefail
+umask 077 # results can contain user names and addresses: readable by the owner only
+
+# Find the directory of this script, following symbolic links, so the libraries are found
+# even when seclog is started through a link in a directory on PATH.
+resolve_script_dir() {
+    local source=${BASH_SOURCE[0]} dir
+    while [[ -L $source ]]; do
+        dir=$(cd -P -- "$(dirname -- "$source")" && pwd) || exit 1
+        source=$(readlink "$source")
+        if [[ $source != /* ]]; then
+            source=$dir/$source
+        fi
+    done
+    cd -P -- "$(dirname -- "$source")" && pwd
+}
+
+SECLOG_ROOT=$(cd -- "$(resolve_script_dir)/.." && pwd) || exit 1
+AWK_DIR=$SECLOG_ROOT/lib/awk
+# shellcheck source=lib/seclog_common.sh
+source "$SECLOG_ROOT/lib/seclog_common.sh"
+# shellcheck source=lib/seclog_validate.sh
+source "$SECLOG_ROOT/lib/seclog_validate.sh"
+# shellcheck source=lib/seclog_pipeline.sh
+source "$SECLOG_ROOT/lib/seclog_pipeline.sh"
+
+usage() {
+    cat <<EOF
+seclog $SECLOG_VERSION - analyse Linux authentication logs
+
+USAGE
+  seclog analyze --input PATH [options]
+  seclog demo [--output-dir DIR]
+  seclog --help | --version
+
+COMMANDS
+  analyze   Analyse one or more log files (or directories) and write the results.
+  demo      Analyse the bundled synthetic sample log. Safe to run anywhere: it reads
+            only samples/auth.log and writes only to a new output directory.
+
+OPTIONS (analyze)
+  -i, --input PATH          Log file, directory of log files, or '-' for standard input.
+                            May be repeated. Files ending in .gz are decompressed on the fly.
+  -o, --output-dir DIR      Where to write the results (default: ./seclog-output/run-<time>).
+                            Existing result files are never overwritten.
+      --since TIME          Only analyse events at or after TIME (2026-03-14 or '2026-03-14 10:30').
+      --until TIME          Only analyse events at or before TIME (a plain date means end of day).
+      --year YYYY           Year for syslog timestamps, which do not contain one
+                            (default: the current year).
+      --failed-threshold N  Failed SSH logins from one source within the window that
+                            count as brute force (default: 5).
+      --window-minutes N    Length of that window in minutes (default: 10).
+      --enum-threshold N    Distinct non-existent usernames from one source that count as
+                            username enumeration (default: 5).
+      --exclude-ips LIST    Comma-separated trusted sources to ignore, e.g. a vulnerability scanner.
+      --fail-on-findings    Exit with status $EXIT_FINDINGS when a high severity finding exists.
+      --dry-run             Check the arguments and inputs, print the plan, write nothing.
+  -q, --quiet               Print only the summary and errors.
+      --no-color            Never use colours (also honoured: the NO_COLOR variable).
+  -h, --help                Show this help.
+      --version             Show the version.
+
+EXIT STATUS
+  $EXIT_OK  success        $EXIT_USAGE  invalid options      $EXIT_INPUT  input problem
+  $EXIT_RUNTIME  runtime failure   $EXIT_FINDINGS  high severity finding (only with --fail-on-findings)
+
+EXAMPLES
+  seclog demo
+  seclog analyze --input /var/log/auth.log --year 2026 --since 2026-03-14
+  seclog analyze -i samples/auth.log --year 2026 --exclude-ips 10.10.30.60 -o ./results
+  zcat /var/log/auth.log.2.gz | seclog analyze --input - --year 2026 --dry-run
+EOF
+}
+
+# Option parsing --------------------------------------------------------------------------
+
+# Default settings. Arrays are only expanded after checking they are not empty because bash
+# 3.2 (the macOS default) treats an empty array as unset under "set -u".
+OPT_INPUTS=()
+OPT_OUTPUT_DIR=""
+OPT_SINCE=""
+OPT_UNTIL=""
+OPT_YEAR=0
+OPT_FAILED_THRESHOLD=5
+OPT_WINDOW_MINUTES=10
+OPT_ENUM_THRESHOLD=5
+OPT_EXCLUDE_IPS=""
+OPT_COLOR=auto
+OPT_DRY_RUN=0
+OPT_FAIL_ON_FINDINGS=0
+
+require_value() {
+    # require_value OPTION "$@" : the option needs a following value
+    if [[ $# -lt 2 || -z $2 ]]; then
+        die "$EXIT_USAGE" "option $1 needs a value (see --help)"
+    fi
+}
+
+parse_options() {
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            -i | --input)
+                require_value "$@"
+                OPT_INPUTS+=("$2")
+                shift 2
+                ;;
+            -o | --output-dir)
+                require_value "$@"
+                OPT_OUTPUT_DIR=$2
+                shift 2
+                ;;
+            --since)
+                require_value "$@"
+                OPT_SINCE=$2
+                shift 2
+                ;;
+            --until)
+                require_value "$@"
+                OPT_UNTIL=$2
+                shift 2
+                ;;
+            --year)
+                require_value "$@"
+                OPT_YEAR=$2
+                shift 2
+                ;;
+            --failed-threshold)
+                require_value "$@"
+                OPT_FAILED_THRESHOLD=$2
+                shift 2
+                ;;
+            --window-minutes)
+                require_value "$@"
+                OPT_WINDOW_MINUTES=$2
+                shift 2
+                ;;
+            --enum-threshold)
+                require_value "$@"
+                OPT_ENUM_THRESHOLD=$2
+                shift 2
+                ;;
+            --exclude-ips)
+                require_value "$@"
+                OPT_EXCLUDE_IPS=$2
+                shift 2
+                ;;
+            --fail-on-findings)
+                OPT_FAIL_ON_FINDINGS=1
+                shift
+                ;;
+            --dry-run)
+                OPT_DRY_RUN=1
+                shift
+                ;;
+            -q | --quiet)
+                OPT_QUIET=1
+                shift
+                ;;
+            --no-color)
+                OPT_COLOR=never
+                shift
+                ;;
+            -h | --help)
+                usage
+                exit "$EXIT_OK"
+                ;;
+            --version)
+                printf 'seclog %s\n' "$SECLOG_VERSION"
+                exit "$EXIT_OK"
+                ;;
+            *)
+                die "$EXIT_USAGE" "unknown option or argument: $1 (see --help)"
+                ;;
+        esac
+    done
+}
+
+# Check every option value before doing any work.
+validate_options() {
+    require_integer "--failed-threshold" "$OPT_FAILED_THRESHOLD" 1 100000
+    require_integer "--window-minutes" "$OPT_WINDOW_MINUTES" 1 10080
+    require_integer "--enum-threshold" "$OPT_ENUM_THRESHOLD" 1 100000
+    if [[ $OPT_YEAR != 0 ]]; then
+        require_integer "--year" "$OPT_YEAR" 1970 2100
+    fi
+    validate_exclude_list "$OPT_EXCLUDE_IPS"
+
+    NORMALIZED_SINCE=""
+    NORMALIZED_UNTIL=""
+    if [[ -n $OPT_SINCE ]]; then
+        NORMALIZED_SINCE=$(validate_time_option "--since" "$OPT_SINCE" start) || exit "$EXIT_USAGE"
+    fi
+    if [[ -n $OPT_UNTIL ]]; then
+        NORMALIZED_UNTIL=$(validate_time_option "--until" "$OPT_UNTIL" end) || exit "$EXIT_USAGE"
+    fi
+    if [[ -n $NORMALIZED_SINCE && -n $NORMALIZED_UNTIL && $NORMALIZED_SINCE > $NORMALIZED_UNTIL ]]; then
+        die "$EXIT_USAGE" "--since ($OPT_SINCE) is later than --until ($OPT_UNTIL)"
+    fi
+
+    AWK_BIN=${SECLOG_AWK:-awk}
+    if ! command -v "$AWK_BIN" >/dev/null 2>&1; then
+        die "$EXIT_RUNTIME" "required program not found: $AWK_BIN"
+    fi
+    CURRENT_YEAR=$(date +%Y)
+    CURRENT_MONTH=$((10#$(date +%m)))
+}
+
+print_dry_run_plan() {
+    local file
+    printf 'seclog: dry run - nothing was read in full and nothing will be written.\n'
+    printf '  Input files (%d):\n' "${#INPUT_FILES[@]}"
+    for file in "${INPUT_FILES[@]}"; do
+        printf '    - %s\n' "$file"
+    done
+    printf '  Output directory : %s (would be created)\n' "$OUTPUT_DIR"
+    printf '  Result files     : %s\n' "${OUTPUT_FILES[*]}"
+    printf '  Time range       : %s .. %s\n' "${NORMALIZED_SINCE:-start of input}" "${NORMALIZED_UNTIL:-end of input}"
+    printf '  Brute force rule : %s failures within %s minutes\n' "$OPT_FAILED_THRESHOLD" "$OPT_WINDOW_MINUTES"
+    printf '  Excluded sources : %s\n' "${OPT_EXCLUDE_IPS:-none}"
+}
+
+main() {
+    if [[ $# -eq 0 ]]; then
+        usage >&2
+        exit "$EXIT_USAGE"
+    fi
+
+    local command=$1
+    case $command in
+        analyze | demo) shift ;;
+        -h | --help | help)
+            usage
+            exit "$EXIT_OK"
+            ;;
+        --version | version)
+            printf 'seclog %s\n' "$SECLOG_VERSION"
+            exit "$EXIT_OK"
+            ;;
+        *) die "$EXIT_USAGE" "unknown command: $command (try --help)" ;;
+    esac
+
+    parse_options "$@"
+    init_color "$OPT_COLOR"
+    validate_options
+
+    if [[ $command == demo ]]; then
+        if ((${#OPT_INPUTS[@]} > 0)); then
+            die "$EXIT_USAGE" "demo uses the bundled sample log; use 'analyze' for your own files"
+        fi
+        OPT_INPUTS=("$SECLOG_ROOT/samples/auth.log")
+        if [[ $OPT_YEAR == 0 ]]; then
+            OPT_YEAR=2026 # the sample log describes events in 2026
+        fi
+    fi
+
+    if ((${#OPT_INPUTS[@]} == 0)); then
+        die "$EXIT_USAGE" "no input given: use --input PATH (or '-' for standard input)"
+    fi
+    collect_input_files "${OPT_INPUTS[@]}"
+
+    OUTPUT_DIR=$OPT_OUTPUT_DIR
+    if [[ -z $OUTPUT_DIR ]]; then
+        OUTPUT_DIR=./seclog-output/$command-$(date +%Y%m%d-%H%M%S)
+    fi
+    check_output_dir "$OUTPUT_DIR"
+
+    if ((OPT_DRY_RUN)); then
+        print_dry_run_plan
+        exit "$EXIT_OK"
+    fi
+
+    trap cleanup_workdir EXIT
+    trap 'exit 130' INT
+    trap 'exit 143' TERM
+    create_workdir
+    run_analysis
+    stage_publish
+
+    print_terminal_summary
+    printf '\nResults written to %s\n' "$OUTPUT_DIR"
+    printf '  %s\n' "${OUTPUT_FILES[@]}"
+
+    if ((OPT_FAIL_ON_FINDINGS)) && has_high_severity_finding; then
+        exit "$EXIT_FINDINGS"
+    fi
+    exit "$EXIT_OK"
+}
+
+main "$@"

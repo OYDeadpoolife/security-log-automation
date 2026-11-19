@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    name: Tests (${{ matrix.os }}, awk = ${{ matrix.awk }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The three awk implementations seclog is written to be compatible with.
+          - { os: ubuntu-latest, awk: mawk }
+          - { os: ubuntu-latest, awk: gawk }
+          - { os: ubuntu-latest, awk: original-awk }
+          # macOS ships Bash 3.2 and BWK awk, the environment the project was developed on.
+          - { os: macos-latest, awk: awk }
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install the awk implementation under test
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y ${{ matrix.awk }}
+
+      - name: Install test tools (pytest, ShellCheck, shfmt)
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Show tool versions
+        run: |
+          bash --version | head -n 1
+          ${{ matrix.awk }} -W version 2>/dev/null | head -n 1 || ${{ matrix.awk }} --version 2>/dev/null | head -n 1 || true
+          python --version
+          shellcheck --version | sed -n 2p
+
+      - name: Run the test suite
+        env:
+          SECLOG_AWK: ${{ matrix.awk }}
+        run: python -m pytest -v

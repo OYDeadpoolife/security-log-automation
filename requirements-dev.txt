@@ -1,0 +1,4 @@
+# Development and test tools only. The seclog command itself needs no Python at all.
+pytest>=7.0
+shellcheck-py>=0.9
+shfmt-py>=3.7

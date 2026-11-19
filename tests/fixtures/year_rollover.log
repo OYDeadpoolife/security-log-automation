@@ -1,0 +1,2 @@
+Dec 31 23:59:58 web01 sshd[1]: Accepted password for alice from 192.0.2.60 port 22 ssh2
+Jan  1 00:00:02 web01 sshd[2]: Accepted password for bob from 192.0.2.61 port 22 ssh2

@@ -1,0 +1,4 @@
+source,failed_logins,distinct_usernames,invalid_usernames,peak_in_window,first_seen,last_seen,accepted_logins,flagged_brute_force
+203.0.113.45,59,13,10,59,2026-03-14T10:02:11,2026-03-14T10:06:20,1,yes
+10.10.30.60,7,1,1,7,2026-03-14T07:00:03,2026-03-14T07:00:27,0,yes
+10.10.30.5,2,1,0,2,2026-03-14T08:30:12,2026-03-14T08:30:19,1,no

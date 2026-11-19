@@ -1,0 +1,9 @@
+Mar 14 10:00:00 web01 sshd[1]: Failed password for root from 192.0.2.40 port 1 ssh2
+Mar 14 10:00:05 web01 sshd[2]: Failed password for root from 192.0.2.40 port 2 ssh2
+Mar 14 10:00:10 web01 sshd[3]: Failed password for root from 192.0.2.40 port 3 ssh2
+Mar 14 10:00:15 web01 sshd[4]: Failed password for root from 192.0.2.40 port 4 ssh2
+Mar 14 10:00:20 web01 sshd[5]: Failed password for root from 192.0.2.40 port 5 ssh2
+Mar 14 10:00:30 web01 sshd[6]: Accepted password for victim from 192.0.2.40 port 6 ssh2
+Mar 14 10:05:00 web01 su[7]: (to labadmin) victim on pts/0
+Mar 14 13:30:00 web01 su[8]: (to labadmin) victim on pts/0
+Mar 14 13:31:00 web01 sudo:   labadmin : TTY=pts/0 ; PWD=/home/labadmin ; USER=root ; COMMAND=/bin/bash

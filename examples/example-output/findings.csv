@@ -1,0 +1,12 @@
+time,rule_id,severity,host,subject,event_count,mitre_technique,title,details
+2026-03-14T07:00:19,SL-001,medium,web01,10.10.30.60,7,T1110.001,SSH brute force,"7 failed logins from 10.10.30.60 (peak 7 within 10 minutes, 1 distinct usernames tried)"
+2026-03-14T09:05:12,SL-006,medium,web01,labadmin,1,T1548.003,Sensitive command run with sudo,"labadmin ran '/usr/sbin/visudo -c' (account management tool) 1 time(s), last at 2026-03-14T09:05:12"
+2026-03-14T10:02:25,SL-001,medium,web01,203.0.113.45,59,T1110.001,SSH brute force,"59 failed logins from 203.0.113.45 (peak 59 within 10 minutes, 13 distinct usernames tried)"
+2026-03-14T10:02:28,SL-002,low,web01,203.0.113.45,10,T1110,SSH username enumeration,10 distinct non-existent usernames were tried from 203.0.113.45
+2026-03-14T10:06:41,SL-003,high,web01,svc-backup,1,T1078.003,SSH login succeeded after a brute-force burst,svc-backup logged in with password from 203.0.113.45 after 59 failed attempts in the last 10 minutes
+2026-03-14T10:08:05,SL-005,medium,web01,svc-backup,1,T1548.003,sudo request denied,"1 denied sudo attempt(s) by svc-backup, 1 of them 'not in sudoers' (first command: /usr/bin/bash)"
+2026-03-14T10:08:40,SL-008,high,web01,svc-backup,1,T1078.003,Privilege activity by a suspect account,svc-backup failed to switch user with su to labadmin. svc-backup logged in from 203.0.113.45 after a brute-force burst
+2026-03-14T10:09:30,SL-008,high,web01,svc-backup,1,T1078.003,Privilege activity by a suspect account,svc-backup switched user with su to labadmin. svc-backup logged in from 203.0.113.45 after a brute-force burst
+2026-03-14T10:10:02,SL-008,high,web01,labadmin,1,T1078.003,Privileged command by a suspect account,labadmin ran '/bin/bash' as root [shell]. svc-backup logged in from 203.0.113.45 after a brute-force burst
+2026-03-14T10:11:20,SL-007,high,web01,support01,1,T1136.001,New local account created,account support01 was created (4 minutes after a suspicious login: svc-backup logged in from 203.0.113.45 after a brute-force burst)
+2026-03-14T10:11:50,SL-007,high,web01,support01,1,T1098,Account added to a privileged group,account support01 was added to the privileged group sudo (5 minutes after a suspicious login: svc-backup logged in from 203.0.113.45 after a brute-force burst)

@@ -1,0 +1,64 @@
+{
+  "tool": {"name": "seclog", "version": "1.0.0"},
+  "generated_at": "2026-10-03T00:00:00Z",
+  "inputs": [
+    "samples/auth.log"
+  ],
+  "parameters": {
+    "failed_threshold": 5,
+    "window_minutes": 10,
+    "enum_threshold": 5,
+    "since": "",
+    "until": "",
+    "year": 2026,
+    "exclude_ips": ""
+  },
+  "parse": {
+    "lines_total": 353,
+    "lines_blank": 0,
+    "lines_malformed": 0,
+    "lines_truncated": 0,
+    "lines_out_of_range": 0,
+    "lines_ignored": 218,
+    "events": 135,
+    "events_from_excluded_sources": 0,
+    "findings_suppressed": 0
+  },
+  "time_range": {"first_event": "2026-03-14T02:00:05", "last_event": "2026-03-14T12:40:17"},
+  "hosts": ["web01"],
+  "event_types": {
+    "ssh_failed": 68,
+    "ssh_invalid_user": 54,
+    "sudo_command": 4,
+    "ssh_accepted": 3,
+    "group_member_added": 1,
+    "password_changed": 1,
+    "su_failed": 1,
+    "su_success": 1,
+    "sudo_not_in_sudoers": 1,
+    "user_created": 1
+  },
+  "summary": {"findings_total": 11, "high": 6, "medium": 4, "low": 1},
+  "findings": [
+    {"rule_id": "SL-001", "severity": "medium", "time": "2026-03-14T07:00:19", "host": "web01", "subject": "10.10.30.60", "event_count": 7, "mitre_technique": "T1110.001", "title": "SSH brute force", "details": "7 failed logins from 10.10.30.60 (peak 7 within 10 minutes, 1 distinct usernames tried)"},
+    {"rule_id": "SL-006", "severity": "medium", "time": "2026-03-14T09:05:12", "host": "web01", "subject": "labadmin", "event_count": 1, "mitre_technique": "T1548.003", "title": "Sensitive command run with sudo", "details": "labadmin ran '/usr/sbin/visudo -c' (account management tool) 1 time(s), last at 2026-03-14T09:05:12"},
+    {"rule_id": "SL-001", "severity": "medium", "time": "2026-03-14T10:02:25", "host": "web01", "subject": "203.0.113.45", "event_count": 59, "mitre_technique": "T1110.001", "title": "SSH brute force", "details": "59 failed logins from 203.0.113.45 (peak 59 within 10 minutes, 13 distinct usernames tried)"},
+    {"rule_id": "SL-002", "severity": "low", "time": "2026-03-14T10:02:28", "host": "web01", "subject": "203.0.113.45", "event_count": 10, "mitre_technique": "T1110", "title": "SSH username enumeration", "details": "10 distinct non-existent usernames were tried from 203.0.113.45"},
+    {"rule_id": "SL-003", "severity": "high", "time": "2026-03-14T10:06:41", "host": "web01", "subject": "svc-backup", "event_count": 1, "mitre_technique": "T1078.003", "title": "SSH login succeeded after a brute-force burst", "details": "svc-backup logged in with password from 203.0.113.45 after 59 failed attempts in the last 10 minutes"},
+    {"rule_id": "SL-005", "severity": "medium", "time": "2026-03-14T10:08:05", "host": "web01", "subject": "svc-backup", "event_count": 1, "mitre_technique": "T1548.003", "title": "sudo request denied", "details": "1 denied sudo attempt(s) by svc-backup, 1 of them 'not in sudoers' (first command: /usr/bin/bash)"},
+    {"rule_id": "SL-008", "severity": "high", "time": "2026-03-14T10:08:40", "host": "web01", "subject": "svc-backup", "event_count": 1, "mitre_technique": "T1078.003", "title": "Privilege activity by a suspect account", "details": "svc-backup failed to switch user with su to labadmin. svc-backup logged in from 203.0.113.45 after a brute-force burst"},
+    {"rule_id": "SL-008", "severity": "high", "time": "2026-03-14T10:09:30", "host": "web01", "subject": "svc-backup", "event_count": 1, "mitre_technique": "T1078.003", "title": "Privilege activity by a suspect account", "details": "svc-backup switched user with su to labadmin. svc-backup logged in from 203.0.113.45 after a brute-force burst"},
+    {"rule_id": "SL-008", "severity": "high", "time": "2026-03-14T10:10:02", "host": "web01", "subject": "labadmin", "event_count": 1, "mitre_technique": "T1078.003", "title": "Privileged command by a suspect account", "details": "labadmin ran '/bin/bash' as root [shell]. svc-backup logged in from 203.0.113.45 after a brute-force burst"},
+    {"rule_id": "SL-007", "severity": "high", "time": "2026-03-14T10:11:20", "host": "web01", "subject": "support01", "event_count": 1, "mitre_technique": "T1136.001", "title": "New local account created", "details": "account support01 was created (4 minutes after a suspicious login: svc-backup logged in from 203.0.113.45 after a brute-force burst)"},
+    {"rule_id": "SL-007", "severity": "high", "time": "2026-03-14T10:11:50", "host": "web01", "subject": "support01", "event_count": 1, "mitre_technique": "T1098", "title": "Account added to a privileged group", "details": "account support01 was added to the privileged group sudo (5 minutes after a suspicious login: svc-backup logged in from 203.0.113.45 after a brute-force burst)"}
+  ],
+  "failed_login_sources": [
+    {"source": "203.0.113.45", "failed_logins": 59, "distinct_usernames": 13, "invalid_usernames": 10, "peak_in_window": 59, "first_seen": "2026-03-14T10:02:11", "last_seen": "2026-03-14T10:06:20", "accepted_logins": 1, "flagged_brute_force": true},
+    {"source": "10.10.30.60", "failed_logins": 7, "distinct_usernames": 1, "invalid_usernames": 1, "peak_in_window": 7, "first_seen": "2026-03-14T07:00:03", "last_seen": "2026-03-14T07:00:27", "accepted_logins": 0, "flagged_brute_force": true},
+    {"source": "10.10.30.5", "failed_logins": 2, "distinct_usernames": 1, "invalid_usernames": 0, "peak_in_window": 2, "first_seen": "2026-03-14T08:30:12", "last_seen": "2026-03-14T08:30:19", "accepted_logins": 1, "flagged_brute_force": false}
+  ],
+  "sudo_users": [
+    {"user": "labadmin", "sudo_commands": 4, "denied": 0, "not_in_sudoers": 0, "first_seen": "2026-03-14T08:35:02", "last_seen": "2026-03-14T12:40:17"},
+    {"user": "svc-backup", "sudo_commands": 0, "denied": 1, "not_in_sudoers": 1, "first_seen": "2026-03-14T10:08:05", "last_seen": "2026-03-14T10:08:05"}
+  ]
+}

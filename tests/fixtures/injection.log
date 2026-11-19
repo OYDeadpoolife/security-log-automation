@@ -1,0 +1,7 @@
+Mar 14 10:00:00 web01 sshd[1]: Invalid user =HYPERLINK("http://203.0.113.9","click") from 192.0.2.50 port 1
+Mar 14 10:00:01 web01 sshd[1]: Invalid user "},{"injected":true} from 192.0.2.50 port 2
+Mar 14 10:00:02 web01 sshd[1]: Invalid user <script>alert(1)</script> from 192.0.2.50 port 3
+Mar 14 10:00:03 web01 sshd[1]: Invalid user a|b|c from 192.0.2.50 port 4
+Mar 14 10:00:04 web01 sshd[1]: Invalid user back\slash from 192.0.2.50 port 5
+Mar 14 10:00:05 web01 sshd[1]: Invalid user +cmd from 192.0.2.50 port 6
+Mar 14 10:00:06 web01 sudo:   eve : TTY=pts/0 ; PWD=/tmp ; USER=root ; COMMAND=/bin/bash -c "echo \"hi\" | tee `id` <b>x</b>"
